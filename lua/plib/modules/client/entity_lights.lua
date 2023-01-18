@@ -26,9 +26,9 @@ hook.Add('OnEntityCreated', 'PLib - Dynamic Lights', function( ent )
     local data = registered[ ent:GetClass() ]
     if (data == nil) then return end
 
-    local light = CreateDynamicLight( ent:EntIndex() )
+    local light = CreateDynamicLight()
     if IsValid( light ) then
-        ent.DynamicLight = light
+        light.Entity = ent
 
         local initFunc = data.Init
         if isfunction( initFunc ) then
@@ -38,45 +38,37 @@ hook.Add('OnEntityCreated', 'PLib - Dynamic Lights', function( ent )
         if (light:GetSize() == 0) then
             light:SetSize( light:GetBrightness() * 64 )
         end
-    end
 
-    local thinkFunc = isfunction( data.Think ) and data.Think or nil
-    local autoAlpha = data.AutoAlpha ~= true
-    hook.Add('Think', ent, function( self )
-        local dLight = self.DynamicLight
-        if IsValid( dLight ) then
-            if self:IsWeapon() then
-                local ply = self:GetOwner()
-                if IsValid( ply ) then
-                    if (ply:GetActiveWeapon() == self) then
-                        if autoAlpha and (dLight:GetAlpha() ~= 255) then
-                            dLight:SetAlpha( 255 )
-                        end
+        local thinkFunc = isfunction( data.Think ) and data.Think or nil
+        local autoAlpha = data.AutoAlpha ~= true
 
-                        if (thinkFunc) then
-                            thinkFunc( self, dLight, ply )
+        hook.Add('Think', light, function( self )
+            local entity = self.Entity
+            if IsValid( entity ) then
+                if entity:IsWeapon() then
+                    local ply = entity:GetOwner()
+                    if IsValid( ply ) then
+                        if (ply:GetActiveWeapon() == entity) then
+                            if autoAlpha and (self:GetAlpha() ~= 255) then
+                                self:SetAlpha( 255 )
+                            end
+
+                            if (thinkFunc) then
+                                thinkFunc( entity, self, ply )
+                            end
+                        elseif autoAlpha and (self:GetAlpha() ~= 0) then
+                            self:SetAlpha( 0 )
                         end
-                    elseif autoAlpha and (dLight:GetAlpha() ~= 0) then
-                        dLight:SetAlpha( 0 )
                     end
+                elseif (thinkFunc) then
+                    thinkFunc( entity, self )
                 end
-            elseif (thinkFunc) then
-                thinkFunc( self, dLight )
+
+                self:SetPos( entity:LocalToWorld( entity:OBBCenter() ) )
+                return
             end
 
-            dLight:SetPos( self:LocalToWorld( self:OBBCenter() ) )
-        else
-            hook.Remove('Think', self)
-        end
-    end)
-
-end)
-
-hook.Add('EntityRemoved', 'PLib - Dynamic Lights', function( ent )
-    if registered[ ent:GetClass() ] then
-        local light = ent.DynamicLight
-        if IsValid( light ) then
-            light:Remove()
-        end
+            self:Remove()
+        end)
     end
 end)
