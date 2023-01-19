@@ -103,6 +103,12 @@ entity_lights.Register('npc_rollermine', function( npc, light )
     light:SetBrightness( 0.5 )
 end)
 
+entity_lights.Register('weapon_striderbuster', function( npc, light )
+    light:SetColorUnpacked( 0, 255, 255 )
+    light:SetBrightness( 0.25 )
+    light:SetSize( 32 )
+end)
+
 entity_lights.Register('item_battery', function( ent, light )
     light:SetColorUnpacked( 0, 255, 255 )
     light:SetBrightness( 0.5 )
