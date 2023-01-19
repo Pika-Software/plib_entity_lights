@@ -27,6 +27,7 @@ hook.Add('OnEntityCreated', 'PLib - Dynamic Lights', function( ent )
 	if (data == nil) then return end
 
 	local light = CreateDynamicLight()
+	light:SetSize( -1 )
 	light.Entity = ent
 
 	local initFunc = data.Init
@@ -35,7 +36,7 @@ hook.Add('OnEntityCreated', 'PLib - Dynamic Lights', function( ent )
 	end
 
 	if IsValid( light ) then
-		if (light:GetSize() == 0) then
+		if (light:GetSize() == -1) then
 			light:SetSize( light:GetBrightness() * 64 )
 		end
 
