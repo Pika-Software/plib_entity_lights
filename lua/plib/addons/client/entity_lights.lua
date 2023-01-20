@@ -35,7 +35,8 @@ entity_lights.Register('env_sprite', function( ent, light )
             light:SetBrightness( 0.5 )
         elseif (class == 'npc_manhack') then
             light:SetColorUnpacked( 255, 0, 0 )
-            light:SetBrightness( 1 )
+            light:SetBrightness( 0.25 )
+            light:SetSize( 48 )
         elseif (class == 'npc_cscanner') then
             light:SetColorUnpacked( 255, 255, 255 )
             light:SetBrightness( 0.5 )
