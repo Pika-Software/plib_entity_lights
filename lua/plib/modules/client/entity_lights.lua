@@ -3,18 +3,21 @@ plib.Require( 'dynamic_light' )
 local CreateDynamicLight = CreateDynamicLight
 local isfunction = isfunction
 local ArgAssert = ArgAssert
+local FrameTime = FrameTime
+local math_min = math.min
+local math_max = math.max
 local IsValid = IsValid
 local hook = hook
 
 module( 'entity_lights' )
 
 local registered = {}
-function Register( className, init, think, disableAutoAlpha )
+function Register( className, init, think, alwaysCastLight )
 	ArgAssert( className, 1, 'string' )
 	registered[ className ] = {
 		['Init'] = init,
 		['Think'] = think,
-		['AutoAlpha'] = disableAutoAlpha
+		['AlwaysCastLight'] = alwaysCastLight
 	}
 end
 
@@ -41,7 +44,7 @@ hook.Add('OnEntityCreated', 'PLib - Dynamic Lights', function( ent )
 		end
 
 		local thinkFunc = isfunction( data.Think ) and data.Think or nil
-		local autoAlpha = data.AutoAlpha ~= true
+		local autoAlpha = data.AlwaysCastLight ~= true
 
 		hook.Add('Think', light, function( self )
 			local entity = self.Entity
@@ -49,16 +52,23 @@ hook.Add('OnEntityCreated', 'PLib - Dynamic Lights', function( ent )
 				if entity:IsWeapon() then
 					local ply = entity:GetOwner()
 					if IsValid( ply ) then
-						if (ply:GetActiveWeapon() == entity) then
-							if autoAlpha and (self:GetAlpha() ~= 255) then
-								self:SetAlpha( 255 )
+						local activeWeapon = ply:GetActiveWeapon()
+						if IsValid( activeWeapon ) and (activeWeapon:EntIndex() == entity:EntIndex()) then
+							if autoAlpha then
+								local alpha = self:GetAlpha()
+								if (alpha < 255) then
+									self:SetAlpha( math_min( alpha + 255 * FrameTime(), 255 ) )
+								end
 							end
 
 							if (thinkFunc) then
 								thinkFunc( entity, self, ply )
 							end
-						elseif autoAlpha and (self:GetAlpha() ~= 0) then
-							self:SetAlpha( 0 )
+						elseif autoAlpha then
+							local alpha = self:GetAlpha()
+							if (alpha > 0) then
+								self:SetAlpha( math_max( 0, alpha - 255 * FrameTime() ) )
+							end
 						end
 					end
 				elseif (thinkFunc) then
